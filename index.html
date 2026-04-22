@@ -15,10 +15,11 @@
       font-family: sans-serif;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
+      align-items: flex-start;   
+      min-height: 100vh;     
       margin: 0;
       background: #f2f2f2;
+	 padding: 20px 0;    
     }
 
     .calculator {
@@ -46,8 +47,8 @@
     }
 
     button {
-      height: 60px;
-      font-size: 24px;
+      height: 50px;
+      font-size: 18px;
       border: none;
       border-radius: 10px;
       cursor: pointer;
@@ -72,56 +73,157 @@
       background: #ef476f;
       color: white;
     }
+
+    #history {
+  width: 100%;
+  min-height: 40px;
+  max-height: 70px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding: 6px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.history-clear {
+  height: 40px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  background: #ccc;
+}
+
+.history-item {
+  padding: 6px 4px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.history-item:hover {
+  background: #eee;
+}
   </style>
 </head>
 
 <body>
+
   <div class="calculator">
+
     <input type="text" id="display" readonly>
 
+    <button class="history-clear" onclick="clearHistory()">clear</button>    
+    <div id="history"></div>
+
+	
     <div class="buttons">
       <button class="clear" onclick="clearDisplay()">C</button>
+	<button onclick="percent()">%</button>
+<button onclick="memoryAdd()">M+</button>
+<button onclick="memorySubtract()">M-</button>
       <button class="operator" onclick="appendValue('/')">÷</button>
       <button class="operator" onclick="appendValue('*')">×</button>
       <button class="operator" onclick="appendValue('-')">-</button>
+	  <button class="operator" onclick="appendValue('+')">+</button>
 
+
+      <button onclick="appendValue('6')">6</button>
       <button onclick="appendValue('7')">7</button>
       <button onclick="appendValue('8')">8</button>
       <button onclick="appendValue('9')">9</button>
-      <button class="operator" onclick="appendValue('+')">+</button>
-
-      <button onclick="appendValue('4')">4</button>
-      <button onclick="appendValue('5')">5</button>
-      <button onclick="appendValue('6')">6</button>
-      <button onclick="appendValue('1')">1</button>
-
+   
       <button onclick="appendValue('2')">2</button>
       <button onclick="appendValue('3')">3</button>
-      <button onclick="appendValue('0')">0</button>
-      <button onclick="appendValue('.')">.</button>
+      <button onclick="appendValue('4')">4</button>
+      <button onclick="appendValue('5')">5</button>      
 
+     <button onclick="appendValue('0')">0</button>
+      <button onclick="appendValue('1')">1</button>
+       <button onclick="appendValue('.')">.</button>
+
+
+ 
       <button class="equal" onclick="calculate()">=</button>
     </div>
   </div>
 
   <script>
-    const display = document.getElementById("display");
+  const display = document.getElementById("display");
+const historyDiv = document.getElementById("history");
 
-    function appendValue(value) {
-      display.value += value;
-    }
+// 初期読み込み（保存データ復元）
+window.onload = function () {
+  const saved = localStorage.getItem("calcHistory");
+  if (saved) {
+    const list = JSON.parse(saved);
+    list.forEach(addHistoryToUI);
+  }
+};
 
-    function clearDisplay() {
-      display.value = "";
-    }
+function appendValue(value) {
+  display.value += value;
+}
 
-    function calculate() {
-      try {
-        display.value = eval(display.value);
-      } catch {
-        display.value = "Error";
-      }
-    }
-  </script>
+function clearDisplay() {
+  display.value = "";
+}
+
+function calculate() {
+  try {
+    const expression = display.value;
+    const result = eval(expression);
+
+    const text = expression + " = " + result;
+
+    addHistoryToUI(text);
+    saveHistory(text);
+
+    display.value = result;
+  } catch {
+    display.value = "Error";
+  }
+}
+
+function percent() {
+  display.value = display.value / 100;
+}
+
+// 履歴を画面に追加
+function addHistoryToUI(text) {
+  const item = document.createElement("div");
+  item.className = "history-item";
+  item.textContent = text;
+
+  // クリックで再利用
+  item.onclick = () => {
+    display.value = text.split(" = ")[0];
+  };
+
+  historyDiv.prepend(item);
+}
+
+// 履歴保存
+function saveHistory(text) {
+  let list = JSON.parse(localStorage.getItem("calcHistory")) || [];
+  list.unshift(text);
+  localStorage.setItem("calcHistory", JSON.stringify(list));
+}
+
+// 履歴クリア
+function clearHistory() {
+  localStorage.removeItem("calcHistory");
+  historyDiv.innerHTML = "";
+}  
+
+let memory = 0;
+
+function memoryAdd() {
+  memory += Number(display.value) || 0;
+}
+
+function memorySubtract() {
+  memory -= Number(display.value) || 0;
+}
+
+</script>
 </body>
 </html>
