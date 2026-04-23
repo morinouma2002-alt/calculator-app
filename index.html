@@ -1,33 +1,133 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>電卓アプリ</title>
 
-  <!-- ★ ここを追加 -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <style>
+    :root {
+      --bg: #f2f2f2;
+      --card: #ffffff;
+      --display-bg: #ffffff;
+      --display-text: #222222;
+      --btn: #e0e0e0;
+      --btn-text: #222222;
+      --operator: #ffd166;
+      --equal: #06d6a0;
+      --clear: #ef476f;
+      --history-bg: #f7f7f7;
+      --history-item-hover: #eeeeee;
+      --history-clear: #cccccc;
+      --panel-bg: #ffffff;
+      --panel-text: #222222;
+      --panel-border: #dddddd;
+	  --blue-filter: none;
+    }
+
     body {
       font-family: sans-serif;
       display: flex;
       justify-content: center;
-      align-items: flex-start;   
-      min-height: 100vh;     
+      align-items: flex-start;
+      min-height: 100vh;
       margin: 0;
-      background: #f2f2f2;
-	 padding: 20px 0;    
+      background: var(--bg);
+      padding: 20px 0;
+      transition: background 0.3s ease;
+      position: relative;
+	  
+	  filter: var(--blue-filter);
     }
 
     .calculator {
       width: 320px;
-      background: white;
+      background: var(--card);
       padding: 20px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: background 0.3s ease;
+    }
+
+    .theme-floating {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      background: var(--panel-bg);
+      color: var(--panel-text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .theme-menu {
+      margin-top: 8px;
+      background: var(--panel-bg);
+      color: var(--panel-text);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 10px;
+      width: 190px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      display: none;
+    }
+
+    .theme-menu.show {
+      display: block;
+    }
+
+    .theme-menu-title {
+      font-size: 14px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .theme-option {
+      width: 100%;
+      height: 38px;
+      margin-bottom: 6px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: var(--btn);
+      color: var(--btn-text);
+      text-align: left;
+      padding: 0 10px;
+      font-size: 14px;
+    }
+
+    .theme-option:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .slider-wrap {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--panel-border);
+    }
+
+    .slider-label {
+      font-size: 13px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #colorStrength {
+      width: 100%;
     }
 
     #display {
@@ -38,6 +138,10 @@
       margin-bottom: 16px;
       padding: 10px;
       box-sizing: border-box;
+      border: none;
+      border-radius: 10px;
+      background: var(--display-bg);
+      color: var(--display-text);
     }
 
     .buttons {
@@ -52,178 +156,536 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      background: #e0e0e0;
+      background: var(--btn);
+      color: var(--btn-text);
+      transition: opacity 0.2s ease, transform 0.1s ease;
     }
 
     button:hover {
       opacity: 0.9;
     }
 
+    button:active {
+      transform: scale(0.97);
+    }
+
     .operator {
-      background: #ffd166;
+      background: var(--operator);
+      color: white;
     }
 
     .equal {
-      background: #06d6a0;
+      background: var(--equal);
       color: white;
       grid-column: span 2;
     }
 
     .clear {
-      background: #ef476f;
+      background: var(--clear);
       color: white;
     }
 
     #history {
-  width: 100%;
-  min-height: 40px;
-  max-height: 70px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  padding: 6px;
-  background: #f7f7f7;
-  border-radius: 10px;
-  font-size: 14px;
-}
+      width: 100%;
+      min-height: 40px;
+      max-height: 70px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 6px;
+      background: var(--history-bg);
+      border-radius: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+      color: var(--display-text);
+    }
 
-.history-clear {
-  height: 40px;
-  font-size: 14px;
-  margin-bottom: 8px;
-  background: #ccc;
-}
+    .history-clear {
+      height: 40px;
+      font-size: 14px;
+      margin-bottom: 8px;
+      background: var(--history-clear);
+      color: var(--btn-text);
+    }
 
-.history-item {
-  padding: 6px 4px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-}
+    .history-item {
+      padding: 6px 4px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
 
-.history-item:hover {
-  background: #eee;
-}
+    .history-item:hover {
+      background: var(--history-item-hover);
+    }
   </style>
 </head>
 
 <body>
+  <div class="theme-floating">
+    <button class="theme-toggle" onclick="toggleThemeMenu()">🎨</button>
+
+    <div class="theme-menu" id="themeMenu">
+      <div class="theme-menu-title">テーマ変更</div>
+
+      <button class="theme-option" onclick="selectTheme('white')">ホワイト</button>
+      <button class="theme-option" onclick="selectTheme('pink')">ピンク</button>
+      <button class="theme-option" onclick="selectTheme('purple')">パープル</button>
+      <button class="theme-option" onclick="selectTheme('blue')">ブルー</button>
+      <button class="theme-option" onclick="selectTheme('green')">グリーン</button>
+      <button class="theme-option" onclick="selectTheme('dark')">ダーク</button>
+
+      <div class="slider-wrap">
+        <div class="slider-label">
+          <span>色の濃さ</span>
+          <span id="strengthValue">50</span>
+        </div>
+
+        <input
+          type="range"
+          id="colorStrength"
+          min="0"
+          max="100"
+          value="50"
+          oninput="updateStrength(this.value)"
+        >
+      </div>
+	  
+	  <div class="slider-wrap">
+  <div class="slider-label">
+    <span>夜間モード</span>
+    <input type="checkbox" id="nightModeToggle" onchange="toggleNightMode(this.checked)">
+  </div>
+</div>
+
+<div class="slider-wrap">
+  <div class="slider-label">
+    <span>開始時刻</span>
+    <span id="nightStartValue">18</span>
+  </div>
+  <input
+    type="range"
+    id="nightStart"
+    min="0"
+    max="23"
+    value="18"
+    oninput="updateNightTime()"
+  >
+</div>
+
+<div class="slider-wrap">
+  <div class="slider-label">
+    <span>終了時刻</span>
+    <span id="nightEndValue">6</span>
+  </div>
+  <input
+    type="range"
+    id="nightEnd"
+    min="0"
+    max="23"
+    value="6"
+    oninput="updateNightTime()"
+  >
+</div>
+    <div class="slider-wrap">
+  <div class="slider-label">
+    <span>メモ帳</span>
+  </div>
+
+  <textarea id="memoPad" placeholder="ここにメモを書けます"></textarea>
+</div>
+  </div>
+ </div>
+
+
 
   <div class="calculator">
-
     <input type="text" id="display" readonly>
 
-    <button class="history-clear" onclick="clearHistory()">clear</button>    
+    <button class="history-clear" onclick="clearHistory()">履歴クリア</button>
     <div id="history"></div>
 
-	
     <div class="buttons">
       <button class="clear" onclick="clearDisplay()">C</button>
-	<button onclick="percent()">%</button>
-<button onclick="memoryAdd()">M+</button>
-<button onclick="memorySubtract()">M-</button>
-      <button class="operator" onclick="appendValue('/')">÷</button>
-      <button class="operator" onclick="appendValue('*')">×</button>
-      <button class="operator" onclick="appendValue('-')">-</button>
-	  <button class="operator" onclick="appendValue('+')">+</button>
+      <button onclick="percent()">%</button>
+      <button onclick="memoryAdd()">M+</button>
+      <button onclick="memorySubtract()">M-</button>
 
-
-      <button onclick="appendValue('6')">6</button>
       <button onclick="appendValue('7')">7</button>
       <button onclick="appendValue('8')">8</button>
       <button onclick="appendValue('9')">9</button>
-   
+      <button class="operator" onclick="appendValue('/')">÷</button>
+
+      <button onclick="appendValue('4')">4</button>
+      <button onclick="appendValue('5')">5</button>
+      <button onclick="appendValue('6')">6</button>
+      <button class="operator" onclick="appendValue('*')">×</button>
+
+      <button onclick="appendValue('1')">1</button>
       <button onclick="appendValue('2')">2</button>
       <button onclick="appendValue('3')">3</button>
-      <button onclick="appendValue('4')">4</button>
-      <button onclick="appendValue('5')">5</button>      
+      <button class="operator" onclick="appendValue('-')">-</button>
 
-     <button onclick="appendValue('0')">0</button>
-      <button onclick="appendValue('1')">1</button>
-       <button onclick="appendValue('.')">.</button>
-
-
- 
+      <button onclick="appendValue('0')">0</button>
+      <button onclick="appendValue('.')">.</button>
+      <button class="operator" onclick="appendValue('+')">+</button>
       <button class="equal" onclick="calculate()">=</button>
     </div>
   </div>
 
   <script>
-  const display = document.getElementById("display");
-const historyDiv = document.getElementById("history");
+    const display = document.getElementById("display");
+    const historyDiv = document.getElementById("history");
+    const themeMenu = document.getElementById("themeMenu");
+    const strengthValue = document.getElementById("strengthValue");
+    const colorStrength = document.getElementById("colorStrength");
+	
+	const nightModeToggle = document.getElementById("nightModeToggle");
+	const nightStart = document.getElementById("nightStart");
+	const nightEnd = document.getElementById("nightEnd");
+	const nightStartValue = document.getElementById("nightStartValue");
+	const nightEndValue = document.getElementById("nightEndValue");
 
-// 初期読み込み（保存データ復元）
-window.onload = function () {
-  const saved = localStorage.getItem("calcHistory");
-  if (saved) {
-    const list = JSON.parse(saved);
-    list.forEach(addHistoryToUI);
+    let currentThemeName = "white";
+    let currentStrength = 50;
+
+    const themes = {
+      white: {
+        "--bg": "#f2f2f2",
+        "--card": "#ffffff",
+        "--display-bg": "#ffffff",
+        "--display-text": "#222222",
+        "--btn": "#e0e0e0",
+        "--btn-text": "#222222",
+        "--operator": "#ffd166",
+        "--equal": "#06d6a0",
+        "--clear": "#ef476f",
+        "--history-bg": "#f7f7f7",
+        "--history-item-hover": "#eeeeee",
+        "--history-clear": "#cccccc",
+        "--panel-bg": "#ffffff",
+        "--panel-text": "#222222",
+        "--panel-border": "#dddddd"
+      },
+
+      pink: {
+        "--bg": "#fff4f8",
+        "--card": "#ffffff",
+        "--display-bg": "#fff8fb",
+        "--display-text": "#4a2a35",
+        "--btn": "#f9dce7",
+        "--btn-text": "#4a2a35",
+        "--operator": "#f7a8c4",
+        "--equal": "#ff6f9f",
+        "--clear": "#ff4d88",
+        "--history-bg": "#fff0f5",
+        "--history-item-hover": "#ffe0ea",
+        "--history-clear": "#f3c6d8",
+        "--panel-bg": "#ffffff",
+        "--panel-text": "#4a2a35",
+        "--panel-border": "#f0cddd"
+      },
+
+      purple: {
+        "--bg": "#f7f3ff",
+        "--card": "#ffffff",
+        "--display-bg": "#faf7ff",
+        "--display-text": "#3f2f5a",
+        "--btn": "#e8ddff",
+        "--btn-text": "#3f2f5a",
+        "--operator": "#b79cff",
+        "--equal": "#8b5cf6",
+        "--clear": "#ec4899",
+        "--history-bg": "#f3eeff",
+        "--history-item-hover": "#e6dcff",
+        "--history-clear": "#d8c9ff",
+        "--panel-bg": "#ffffff",
+        "--panel-text": "#3f2f5a",
+        "--panel-border": "#ddd2ff"
+      },
+
+      blue: {
+        "--bg": "#eef7ff",
+        "--card": "#ffffff",
+        "--display-bg": "#f7fbff",
+        "--display-text": "#1f3b57",
+        "--btn": "#dbeafe",
+        "--btn-text": "#1f3b57",
+        "--operator": "#60a5fa",
+        "--equal": "#2563eb",
+        "--clear": "#ef4444",
+        "--history-bg": "#eff6ff",
+        "--history-item-hover": "#dbeafe",
+        "--history-clear": "#bfdcff",
+        "--panel-bg": "#ffffff",
+        "--panel-text": "#1f3b57",
+        "--panel-border": "#cfe3ff"
+      },
+
+      green: {
+        "--bg": "#f2fff7",
+        "--card": "#ffffff",
+        "--display-bg": "#f8fffb",
+        "--display-text": "#234434",
+        "--btn": "#d9fbe8",
+        "--btn-text": "#234434",
+        "--operator": "#6ccf9b",
+        "--equal": "#22c55e",
+        "--clear": "#f97316",
+        "--history-bg": "#effdf5",
+        "--history-item-hover": "#dcfce7",
+        "--history-clear": "#c7efd8",
+        "--panel-bg": "#ffffff",
+        "--panel-text": "#234434",
+        "--panel-border": "#cfead9"
+      },
+
+      dark: {
+        "--bg": "#1e1e1e",
+        "--card": "#2a2a2a",
+        "--display-bg": "#1a1a1a",
+        "--display-text": "#f5f5f5",
+        "--btn": "#3a3a3a",
+        "--btn-text": "#f5f5f5",
+        "--operator": "#f59e0b",
+        "--equal": "#10b981",
+        "--clear": "#ef4444",
+        "--history-bg": "#222222",
+        "--history-item-hover": "#333333",
+        "--history-clear": "#555555",
+        "--panel-bg": "#2a2a2a",
+        "--panel-text": "#f5f5f5",
+        "--panel-border": "#444444"
+      }
+    };
+
+    function mixWithWhite(hex, amount) {
+      const color = hex.replace("#", "");
+      const r = parseInt(color.substring(0, 2), 16);
+      const g = parseInt(color.substring(2, 4), 16);
+      const b = parseInt(color.substring(4, 6), 16);
+
+      const newR = Math.round(r + (255 - r) * amount);
+      const newG = Math.round(g + (255 - g) * amount);
+      const newB = Math.round(b + (255 - b) * amount);
+
+      return "#" +
+        newR.toString(16).padStart(2, "0") +
+        newG.toString(16).padStart(2, "0") +
+        newB.toString(16).padStart(2, "0");
+    }
+
+    function mixWithBlack(hex, amount) {
+      const color = hex.replace("#", "");
+      const r = parseInt(color.substring(0, 2), 16);
+      const g = parseInt(color.substring(2, 4), 16);
+      const b = parseInt(color.substring(4, 6), 16);
+
+      const newR = Math.round(r * (1 - amount));
+      const newG = Math.round(g * (1 - amount));
+      const newB = Math.round(b * (1 - amount));
+
+      return "#" +
+        newR.toString(16).padStart(2, "0") +
+        newG.toString(16).padStart(2, "0") +
+        newB.toString(16).padStart(2, "0");
+    }
+
+    function applyAdjustedTheme(themeName) {
+      const theme = themes[themeName];
+
+      for (const key in theme) {
+        let value = theme[key];
+
+        if (value.startsWith("#")) {
+          if (currentStrength < 50) {
+            const amount = (50 - currentStrength) / 50;
+            value = mixWithWhite(value, amount);
+          } else if (currentStrength > 50) {
+            const amount = (currentStrength - 50) / 100;
+            value = mixWithBlack(value, amount);
+          }
+        }
+
+        document.documentElement.style.setProperty(key, value);
+      }
+    }
+
+    function changeTheme(themeName) {
+      currentThemeName = themeName;
+      applyAdjustedTheme(themeName);
+      localStorage.setItem("calcTheme", themeName);
+    }
+
+    function updateStrength(value) {
+      currentStrength = Number(value);
+      strengthValue.textContent = value;
+      localStorage.setItem("calcStrength", value);
+      applyAdjustedTheme(currentThemeName);
+    }
+	
+	function applyNightMode(enabled) {
+  if (enabled) {
+    document.documentElement.style.setProperty(
+      "--blue-filter",
+      "sepia(0.35) brightness(0.92)"
+    );
+  } else {
+    document.documentElement.style.setProperty("--blue-filter", "none");
   }
-};
-
-function appendValue(value) {
-  display.value += value;
 }
 
-function clearDisplay() {
-  display.value = "";
+function toggleNightMode(enabled) {
+  applyNightMode(enabled);
+  localStorage.setItem("nightMode", enabled ? "on" : "off");
 }
 
-function calculate() {
-  try {
-    const expression = display.value;
-    const result = eval(expression);
+function updateNightTime() {
+  const start = Number(nightStart.value);
+  const end = Number(nightEnd.value);
 
-    const text = expression + " = " + result;
+  nightStartValue.textContent = start;
+  nightEndValue.textContent = end;
 
-    addHistoryToUI(text);
-    saveHistory(text);
+  localStorage.setItem("nightStart", start);
+  localStorage.setItem("nightEnd", end);
+  
+  const hour = new Date().getHours();
+const autoNight = isNightTime(hour, start, end);
 
-    display.value = result;
-  } catch {
-    display.value = "Error";
+// 手動設定がないときだけ自動反映
+if (!localStorage.getItem("nightMode")) {
+  nightModeToggle.checked = autoNight;
+  applyNightMode(autoNight);
+}
+}
+
+function isNightTime(hour, start, end) {
+  if (start === end) return true;
+
+  if (start < end) {
+    return hour >= start && hour < end;
+  } else {
+    return hour >= start || hour < end;
   }
 }
 
-function percent() {
-  display.value = display.value / 100;
+    window.onload = function () {
+      const savedHistory = localStorage.getItem("calcHistory");
+      if (savedHistory) {
+        const list = JSON.parse(savedHistory);
+        list.forEach(addHistoryToUI);
+      }
+
+      const savedTheme = localStorage.getItem("calcTheme") || "white";
+      const savedStrength = Number(localStorage.getItem("calcStrength") || 50);
+
+      currentThemeName = savedTheme;
+      currentStrength = savedStrength;
+
+      colorStrength.value = savedStrength;
+      strengthValue.textContent = savedStrength;
+
+      applyAdjustedTheme(savedTheme);
+	  
+	  const savedNightStart = Number(localStorage.getItem("nightStart") || 18);
+const savedNightEnd = Number(localStorage.getItem("nightEnd") || 6);
+
+nightStart.value = savedNightStart;
+nightEnd.value = savedNightEnd;
+nightStartValue.textContent = savedNightStart;
+nightEndValue.textContent = savedNightEnd;
+
+const hour = new Date().getHours();
+const autoNight = isNightTime(hour, savedNightStart, savedNightEnd);
+
+const savedNightMode = localStorage.getItem("nightMode");
+
+if (savedNightMode) {
+  const enabled = savedNightMode === "on";
+  nightModeToggle.checked = enabled;
+  applyNightMode(enabled);
+} else {
+  nightModeToggle.checked = autoNight;
+  applyNightMode(autoNight);
 }
+	 
 
-// 履歴を画面に追加
-function addHistoryToUI(text) {
-  const item = document.createElement("div");
-  item.className = "history-item";
-  item.textContent = text;
+    };
 
-  // クリックで再利用
-  item.onclick = () => {
-    display.value = text.split(" = ")[0];
-  };
+    function toggleThemeMenu() {
+      themeMenu.classList.toggle("show");
+    }
 
-  historyDiv.prepend(item);
-}
+    function selectTheme(themeName) {
+      changeTheme(themeName);
+      themeMenu.classList.remove("show");
+    }
 
-// 履歴保存
-function saveHistory(text) {
-  let list = JSON.parse(localStorage.getItem("calcHistory")) || [];
-  list.unshift(text);
-  localStorage.setItem("calcHistory", JSON.stringify(list));
-}
+    function appendValue(value) {
+      display.value += value;
+    }
 
-// 履歴クリア
-function clearHistory() {
-  localStorage.removeItem("calcHistory");
-  historyDiv.innerHTML = "";
-}  
+    function clearDisplay() {
+      display.value = "";
+    }
 
-let memory = 0;
+    function calculate() {
+      try {
+        const expression = display.value;
+        const result = eval(expression);
 
-function memoryAdd() {
-  memory += Number(display.value) || 0;
-}
+        const text = expression + " = " + result;
+        addHistoryToUI(text);
+        saveHistory(text);
 
-function memorySubtract() {
-  memory -= Number(display.value) || 0;
-}
+        display.value = result;
+      } catch {
+        display.value = "Error";
+      }
+    }
 
-</script>
+    function percent() {
+      display.value = display.value / 100;
+    }
+
+    function addHistoryToUI(text) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.textContent = text;
+
+      item.onclick = () => {
+        display.value = text.split(" = ")[0];
+      };
+
+      historyDiv.prepend(item);
+    }
+
+    function saveHistory(text) {
+      let list = JSON.parse(localStorage.getItem("calcHistory")) || [];
+      list.unshift(text);
+      localStorage.setItem("calcHistory", JSON.stringify(list));
+    }
+
+    function clearHistory() {
+      localStorage.removeItem("calcHistory");
+      historyDiv.innerHTML = "";
+    }
+
+    let memory = 0;
+
+    function memoryAdd() {
+      memory += Number(display.value) || 0;
+    }
+
+    function memorySubtract() {
+      memory -= Number(display.value) || 0;
+    }
+
+    document.addEventListener("click", function(event) {
+      const floating = document.querySelector(".theme-floating");
+      if (!floating.contains(event.target)) {
+        themeMenu.classList.remove("show");
+      }
+    });
+  </script>
 </body>
 </html>
